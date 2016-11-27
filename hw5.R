@@ -118,9 +118,70 @@ plot(LabelAppeal,TARGET, main="LabelAppeal")
 plot(AcidIndex,TARGET, main="AcidIndex")
 plot(STARS,TARGET, main="STARS")
 
+#Code missing stars as -1 and convert to categorical value
+stars_missing=is.na(wine_training$STARS)
+completed_wine$STARS[stars_missing]=-1
+completed_wine$STARS=as.factor(completed_wine$STARS)
+
 
 #all variable model - doesn't look great - high variance
 allvarmodel <- glm(TARGET ~ ., family=poisson, completed_wine)
 summary(allvarmodel)
 
 #Next steps, let's try some analysis to determine the "best" variables to use in a model
+#Let's try variable based on exploratory analysis 
+pois_model1 = glm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, 
+                  data=completed_wine,family=poisson)
+summary(pois_model1)
+
+pois_model2 = glm(TARGET ~ (STARS + LabelAppeal)^2 + AcidIndex + VolatileAcidity + Alcohol, 
+                  data=completed_wine, family=poisson)
+summary(pois_model2)
+
+#As we have significant number of entries with STARS missing let's try 
+#     separate models for data with stars and data without stars value
+pois_star_model=glm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, 
+                    data=completed_wine[!stars_missing,], family=poisson)
+summary(pois_star_model)
+pois_nostar_model=glm(TARGET ~ LabelAppeal + AcidIndex + VolatileAcidity + Alcohol + pH , 
+                             data=completed_wine[stars_missing,-15], family=poisson)
+summary(pois_nostar_model)
+
+#As it is simple to compare two models with one models by AIC let's check errors
+sqrt(mean((pois_model2$fitted.values[starts_missing]-wine_training$TARGET[stars_missing])^2))
+sqrt(mean((pois_nostar_model$fitted.values-wine_training$TARGET[stars_missing])^2))
+
+sqrt(mean((pois_model2$fitted.values[!starts_missing]-wine_training$TARGET[!stars_missing])^2))
+sqrt(mean((pois_star_model$fitted.values-wine_training$TARGET[!stars_missing])^2))
+
+###############  Negative Binomial Models ###################
+
+library(MASS)
+allvar_nb = glm(TARGET ~ ., family=negative.binomial(1), completed_wine)
+summary(allvar_nb)
+
+
+nb_model1 = glm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, 
+                  data=completed_wine,family=negative.binomial(1))
+summary(nb_model1)
+
+nb_model2 = glm(TARGET ~ (STARS + LabelAppeal)^2 + AcidIndex + VolatileAcidity + Alcohol, 
+                  data=completed_wine, family=negative.binomial(1))
+summary(nb_model2)
+
+#As we have significant number of entries with STARS missing let's try 
+#     separate models for data with stars and data without stars value
+nb_star_model=glm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, 
+                    data=completed_wine[!stars_missing,], family=negative.binomial(1))
+summary(nb_star_model)
+nb_nostar_model=glm(TARGET ~ LabelAppeal + AcidIndex + VolatileAcidity + Alcohol + pH , 
+                      data=completed_wine[stars_missing,-15], family=negative.binomial(1))
+summary(nb_nostar_model)
+
+#As it is simple to compare two models with one models by AIC let's check errors
+sqrt(mean((nb_model2$fitted.values[starts_missing]-wine_training$TARGET[stars_missing])^2))
+sqrt(mean((nb_nostar_model$fitted.values-wine_training$TARGET[stars_missing])^2))
+
+sqrt(mean((nb_model2$fitted.values[!starts_missing]-wine_training$TARGET[!stars_missing])^2))
+sqrt(mean((nb_star_model$fitted.values-wine_training$TARGET[!stars_missing])^2))
+
