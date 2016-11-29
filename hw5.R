@@ -122,6 +122,7 @@ plot(STARS,TARGET, main="STARS")
 stars_missing=is.na(wine_training$STARS)
 completed_wine$STARS[stars_missing]=-1
 completed_wine$STARS=as.factor(completed_wine$STARS)
+completed_wine$LabelAppeal=as.factor(completed_wine$LabelAppeal)
 
 
 #all variable model - doesn't look great - high variance
@@ -191,3 +192,31 @@ summary(mls1)
 
 mls2 <- lm(TARGET ~ LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, data=completed_wine[stars_missing,-15])
 summary(mls2)
+
+
+############## Make Prediction ############
+
+wine_eval=read.csv("wine-evaluation-data.csv")
+#Impute Missing Values
+imputed_wine_eval <- mice(wine_eval[,c(-1,-2,-16)], m=5, maxit = 50, method = 'pmm', seed = 500)
+#completed dataset
+completed_wine_eval <- complete(imputed_wine_eval,1)
+completed_wine_eval$STARS <- cbind(wine_eval$STARS)
+stars_missing_eval=is.na(wine_eval$STARS)
+completed_wine_eval$STARS[stars_missing_eval]=-1
+completed_wine_eval$STARS=as.factor(completed_wine_eval$STARS)
+completed_wine_eval$LabelAppeal=as.factor(completed_wine_eval$LabelAppeal)
+
+wine_predictions=NULL
+wine_predictions=data.frame(IN=wine_eval$IN,TARGET=0)
+#Use selected models to make preidction
+predict_stars_notmissing=predict(pois_star_model,
+                                 newdata=completed_wine_eval[!stars_missing_eval,],
+                                 type="response")
+predict_stars_missing=predict(nb_nostar_model,
+                              newdata=completed_wine_eval[stars_missing_eval,],
+                              type="response")
+wine_predictions$TARGET[!stars_missing_eval]=round(predict_stars_notmissing)
+wine_predictions$TARGET[stars_missing_eval]=round(predict_stars_missing)
+wine_predictions=as.data.frame(wine_predictions)
+write.csv(wine_predictions,"wine_prediction.csv",row.names = F)
