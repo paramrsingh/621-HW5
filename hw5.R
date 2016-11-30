@@ -187,11 +187,16 @@ sqrt(mean((nb_model2$fitted.values[!starts_missing]-wine_training$TARGET[!stars_
 sqrt(mean((nb_star_model$fitted.values-wine_training$TARGET[!stars_missing])^2))
 
 #multiple linear regression models
-mls1 <- lm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, data=completed_wine)
+
+mls <- lm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, data=completed_wine)
+summary(mls1)
+
+mls1 <- lm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, data=completed_wine[!stars_missing,])
 summary(mls1)
 
 mls2 <- lm(TARGET ~ LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, data=completed_wine[stars_missing,-15])
 summary(mls2)
+
 
 
 ############## Make Prediction ############
