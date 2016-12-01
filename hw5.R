@@ -1,3 +1,4 @@
+#Read training Data
 wine_training <- read.csv('wine-training-data.csv')
 str(wine_training)
 summary(wine_training)
@@ -189,7 +190,7 @@ sqrt(mean((nb_star_model$fitted.values-wine_training$TARGET[!stars_missing])^2))
 #multiple linear regression models
 
 mls <- lm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, data=completed_wine)
-summary(mls1)
+summary(mls)
 
 mls1 <- lm(TARGET ~ STARS + LabelAppeal + AcidIndex + VolatileAcidity + Alcohol, data=completed_wine[!stars_missing,])
 summary(mls1)
@@ -221,6 +222,7 @@ predict_stars_notmissing=predict(pois_star_model,
 predict_stars_missing=predict(nb_nostar_model,
                               newdata=completed_wine_eval[stars_missing_eval,],
                               type="response")
+#Combine predictions from two models 
 wine_predictions$TARGET[!stars_missing_eval]=round(predict_stars_notmissing)
 wine_predictions$TARGET[stars_missing_eval]=round(predict_stars_missing)
 wine_predictions=as.data.frame(wine_predictions)
